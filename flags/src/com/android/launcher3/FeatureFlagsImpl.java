@@ -53,8 +53,8 @@ public final class FeatureFlagsImpl implements FeatureFlags {
     private static boolean privateSpaceAddFloatingMaskView = false;
     private static boolean privateSpaceAnimation = true;
     private static boolean privateSpaceAppInstallerButton = true;
-    private static boolean privateSpaceRestrictAccessibilityDrag = true;
-    private static boolean privateSpaceRestrictItemDrag = true;
+    private static boolean privateSpaceRestrictAccessibilityDrag = false;
+    private static boolean privateSpaceRestrictItemDrag = false;
     private static boolean privateSpaceSysAppsSeparation = true;
     private static boolean useActivityOverlay = true;
 
@@ -160,9 +160,9 @@ public final class FeatureFlagsImpl implements FeatureFlags {
             privateSpaceAppInstallerButton =
                     properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_APP_INSTALLER_BUTTON, BuildCompat.isAtLeastU());
             privateSpaceRestrictAccessibilityDrag =
-                    properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_RESTRICT_ACCESSIBILITY_DRAG, BuildCompat.isAtLeastU());
+                    properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_RESTRICT_ACCESSIBILITY_DRAG, false);
             privateSpaceRestrictItemDrag =
-                    properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_RESTRICT_ITEM_DRAG, BuildCompat.isAtLeastU());
+                    properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_RESTRICT_ITEM_DRAG, false);
             privateSpaceSysAppsSeparation =
                     properties.getBoolean(Flags.FLAG_PRIVATE_SPACE_SYS_APPS_SEPARATION, BuildCompat.isAtLeastU());
         } catch (NullPointerException e) {

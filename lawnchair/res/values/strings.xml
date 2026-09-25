@@ -430,6 +430,12 @@
     <string name="smartspace_widget">At a Glance</string>
     <string name="smartspace_widget_description">What to show</string>
 
+    <!-- Private Space lock/unlock widget -->
+    <string name="private_space_toggle_widget">Private Space lock</string>
+    <string name="ps_widget_unlock_title">Unlock</string>
+    <string name="ps_widget_unavailable">N/A</string>
+    <string name="ps_widget_unavailable_description">Private space unavailable</string>
+
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Calendar</string>
     <string name="smartspace_date_and_time">Date and time</string>

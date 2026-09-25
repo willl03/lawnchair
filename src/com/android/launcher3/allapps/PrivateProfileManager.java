@@ -80,6 +80,7 @@ import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.RecyclerViewFastScroller;
+import app.lawnchair.privatespace.PrivateSpaceToggleWidgetProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -235,6 +236,13 @@ public class PrivateProfileManager extends UserProfileManager {
             executeLock();
         }
         addPrivateSpaceDecorator(updatedState);
+        // Keep the Private Space lock/unlock widgets in sync with the drawer state.
+        // Only do this on actual state transitions to avoid a binder call on every
+        // app list update; quiet mode changes from outside reach the widget through
+        // its own profile broadcasts.
+        if (mIsStateTransitioning) {
+            PrivateSpaceToggleWidgetProvider.pushUpdate(mAllApps.getContext());
+        }
     }
 
     /** Returns whether or not Private Space Settings Page is available. */

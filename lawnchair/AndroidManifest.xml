@@ -154,6 +154,30 @@
                 android:resource="@xml/smartspace_appwidget_info" />
         </receiver>
 
+        <receiver
+            android:name="app.lawnchair.privatespace.PrivateSpaceToggleWidgetProvider"
+            android:exported="false"
+            android:label="@string/private_space_toggle_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- Refresh the lock state when the private profile quiet mode changes,
+                     including when changed outside the launcher (Settings, system auth). -->
+                <action android:name="android.intent.action.MANAGED_PROFILE_AVAILABLE" />
+                <action android:name="android.intent.action.MANAGED_PROFILE_UNAVAILABLE" />
+                <action android:name="android.intent.action.MANAGED_PROFILE_ADDED" />
+                <action android:name="android.intent.action.MANAGED_PROFILE_REMOVED" />
+                <action android:name="android.intent.action.PROFILE_AVAILABLE" />
+                <action android:name="android.intent.action.PROFILE_UNAVAILABLE" />
+                <action android:name="android.intent.action.PROFILE_ADDED" />
+                <action android:name="android.intent.action.PROFILE_REMOVED" />
+                <action android:name="android.intent.action.PROFILE_ACCESSIBLE" />
+                <action android:name="android.intent.action.PROFILE_INACCESSIBLE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/private_space_toggle_widget_info" />
+        </receiver>
+
         <meta-data
             android:name="xyz.paphonb.quickstepswitcher.minSdk"
             android:value="${quickstepMinSdk}" />

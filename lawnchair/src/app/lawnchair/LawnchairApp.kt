@@ -19,9 +19,11 @@ package app.lawnchair
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -39,6 +41,7 @@ import androidx.core.content.FileProvider
 import app.lawnchair.backup.LawnchairBackup
 import app.lawnchair.flowerpot.Flowerpot
 import app.lawnchair.preferences.PreferenceManager
+import app.lawnchair.privatespace.PrivateSpaceToggleWidgetProvider
 import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.ui.preferences.destinations.openAppInfo
 import app.lawnchair.util.restartLauncher
@@ -66,6 +69,39 @@ class LawnchairApp : Application() {
         instance = this
         QuickStepContract.sRecentsDisabled = !recentsEnabled
         Flowerpot.Manager.getInstance(this)
+        updatePrivateSpaceWidgetAvailability()
+    }
+
+    /**
+     * The Private Space toggle widget only works while this app is the default home app
+     * (quiet mode control is granted to the home role holder), so hide it from the widget
+     * pickers of other launchers. Component enabled state persists across reboots; when
+     * this app is home it starts at boot and re-enables the widget immediately.
+     */
+    private fun updatePrivateSpaceWidgetAvailability() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val roleManager = getSystemService(RoleManager::class.java) ?: return
+        val packageManager = packageManager
+        val component = PrivateSpaceToggleWidgetProvider.componentName
+        if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
+            if (packageManager.getComponentEnabledSetting(component) !=
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            ) {
+                packageManager.setComponentEnabledSetting(
+                    component,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
+        } else if (packageManager.getComponentEnabledSetting(component) !=
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        ) {
+            packageManager.setComponentEnabledSetting(
+                component,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP,
+            )
+        }
     }
 
     fun hideClockInStatusBar() {
