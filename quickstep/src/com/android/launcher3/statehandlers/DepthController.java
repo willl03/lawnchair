@@ -25,6 +25,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.view.CrossWindowBlurListeners;
+import android.view.SurfaceControl;
 import android.view.View;
 import android.view.ViewRootImpl;
 import android.view.ViewTreeObserver;
@@ -75,7 +76,14 @@ public class DepthController extends BaseDepthController implements StateHandler
         ViewRootImpl viewRootImpl = view.getViewRootImpl();
         try {
             if (Utilities.ATLEAST_Q) {
-                setSurface(viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null);
+                SurfaceControl surface = viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null;
+                if (surface != null) {
+                    // The surface may still carry an opaque flag applied during a previous
+                    // session. Clear it before re-acquiring so the first frames are never
+                    // composited opaque while the wallpaper surface has not drawn yet.
+                    forceSurfaceTransparent();
+                }
+                setSurface(surface);
             }
         } catch (Throwable t) {
             // Ignore any exceptions

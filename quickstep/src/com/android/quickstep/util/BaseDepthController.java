@@ -103,6 +103,15 @@ public class BaseDepthController {
 
     protected boolean mWaitingOnSurfaceValidity;
 
+    /**
+     * Last zoom-out value sent to the wallpaper engine, and the window token it was sent for.
+     * Used to dedupe redundant {@link WallpaperManager#setWallpaperZoomOut} calls, which would
+     * otherwise poke the wallpaper engine while it is re-attaching its surface, potentially
+     * showing a black wallpaper for a moment when returning to Launcher.
+     */
+    private IBinder mLastZoomTokenSent;
+    private float mLastZoomOutSent = -1f;
+
     public BaseDepthController(Launcher activity) {
         mLauncher = activity;
         mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
@@ -137,14 +146,21 @@ public class BaseDepthController {
         float depth = mDepth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
+            float zoomOut;
             if (enableScalingRevealHomeAnimation()) {
-                mWallpaperManager.setWallpaperZoomOut(windowToken, depth);
+                zoomOut = depth;
             } else {
                 // The API's full zoom-out is three times larger than the zoom-out we apply to
                 // the
                 // icons. To keep the two consistent throughout the animation while keeping
                 // Launcher's concept of full depth unchanged, we divide the depth by 3 here.
-                mWallpaperManager.setWallpaperZoomOut(windowToken, depth / 3);
+                zoomOut = depth / 3;
+            }
+            if (!windowToken.equals(mLastZoomTokenSent)
+                    || Float.compare(zoomOut, mLastZoomOutSent) != 0) {
+                mWallpaperManager.setWallpaperZoomOut(windowToken, zoomOut);
+                mLastZoomTokenSent = windowToken;
+                mLastZoomOutSent = zoomOut;
             }
         }
 
@@ -227,5 +243,22 @@ public class BaseDepthController {
      */
     private static float mapDepthToBlur(float depth) {
         return Math.min(3 * depth, 1f);
+    }
+
+    /**
+     * Forces the launcher surface to be composited as non-opaque on the next frame.
+     * Called when the surface is re-acquired after the activity restarts, so the first frames
+     * can never be promoted to opaque while the wallpaper surface has not drawn yet (which
+     * would show as a black wallpaper for a moment when returning to Launcher).
+     */
+    protected void forceSurfaceTransparent() {
+        if (mSurface == null || !mSurface.isValid()) {
+            return;
+        }
+        AttachedSurfaceControl rootSurfaceControl = mLauncher.getRootView().getRootSurfaceControl();
+        if (rootSurfaceControl != null) {
+            rootSurfaceControl.applyTransactionOnDraw(
+                    new SurfaceControl.Transaction().setOpaque(mSurface, false));
+        }
     }
 }
