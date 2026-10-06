@@ -30,6 +30,7 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.icons.BitmapInfo
 import com.android.launcher3.model.data.AppInfo as ModelAppInfo
 import com.android.launcher3.model.data.ItemInfo
+import com.android.launcher3.pm.UserCache
 import com.android.launcher3.popup.SystemShortcut
 import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.PackageManagerHelper
@@ -59,6 +60,13 @@ class LawnchairShortcut {
         val UNINSTALL =
             SystemShortcut.Factory { activity: BaseDraggingActivity, itemInfo: ItemInfo, view: View ->
                 if (itemInfo.targetComponent == null) {
+                    return@Factory null
+                }
+                if (UserCache.getInstance(activity)
+                        .getUserInfo(itemInfo.user)
+                        .isPrivate
+                ) {
+                    // Private Space apps are handled by the AOSP UNINSTALL_APP shortcut.
                     return@Factory null
                 }
                 if (PackageManagerHelper.isSystemApp(
