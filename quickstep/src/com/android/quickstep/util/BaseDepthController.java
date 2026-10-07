@@ -156,12 +156,7 @@ public class BaseDepthController {
                 // Launcher's concept of full depth unchanged, we divide the depth by 3 here.
                 zoomOut = depth / 3;
             }
-            if (!windowToken.equals(mLastZoomTokenSent)
-                    || Float.compare(zoomOut, mLastZoomOutSent) != 0) {
-                mWallpaperManager.setWallpaperZoomOut(windowToken, zoomOut);
-                mLastZoomTokenSent = windowToken;
-                mLastZoomOutSent = zoomOut;
-            }
+            sendWallpaperZoomOut(windowToken, zoomOut, false);
         }
 
         if (!BlurUtils.supportsBlursOnWindows()) {
@@ -211,6 +206,45 @@ public class BaseDepthController {
         if (rootSurfaceControl != null) {
             rootSurfaceControl.applyTransactionOnDraw(transaction);
         }
+    }
+
+    /**
+     * Sends the zoom-out value to the wallpaper engine.
+     *
+     * @param force if true, the value is sent even when it is unchanged from the last update.
+     *              Used to nudge the wallpaper engine into an early re-render when returning
+     *              to Launcher, so its surface gets a first frame as soon as it becomes
+     *              visible, instead of racing the first frame of the home reveal animation.
+     */
+    protected void sendWallpaperZoomOut(IBinder windowToken, float zoomOut, boolean force) {
+        if (!force && windowToken.equals(mLastZoomTokenSent)
+                && Float.compare(zoomOut, mLastZoomOutSent) == 0) {
+            return;
+        }
+        mWallpaperManager.setWallpaperZoomOut(windowToken, zoomOut);
+        mLastZoomTokenSent = windowToken;
+        mLastZoomOutSent = zoomOut;
+    }
+
+    /**
+     * Pokes the wallpaper engine with the current zoom value to trigger an early re-render.
+     * While Launcher is in the background the wallpaper surface is torn down by the system;
+     * when Launcher becomes visible again the engine has to produce a first frame. Sending
+     * the current zoom immediately (even when unchanged) makes the engine render as soon as
+     * its surface is visible again, which avoids a momentary black wallpaper on return.
+     */
+    protected void nudgeWallpaper() {
+        IBinder windowToken = mLauncher.getRootView().getWindowToken();
+        if (windowToken == null) {
+            return;
+        }
+        float zoomOut;
+        if (enableScalingRevealHomeAnimation()) {
+            zoomOut = mDepth;
+        } else {
+            zoomOut = mDepth / 3;
+        }
+        sendWallpaperZoomOut(windowToken, zoomOut, true);
     }
 
     private void setDepth(float depth) {

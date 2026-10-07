@@ -151,6 +151,12 @@ public class DepthController extends BaseDepthController implements StateHandler
      */
     public void setActivityStarted(boolean isStarted) {
         if (isStarted) {
+            if (mEnableDepth) {
+                // Nudge the wallpaper engine into an early re-render while its surface
+                // re-attaches, so the first frames after return are not composited before
+                // the wallpaper has rendered (which shows as a momentary black wallpaper).
+                nudgeWallpaper();
+            }
             mLauncher.getDragLayer().getViewTreeObserver().addOnDrawListener(mOnDrawListener);
         } else {
             mLauncher.getDragLayer().getViewTreeObserver().removeOnDrawListener(mOnDrawListener);
